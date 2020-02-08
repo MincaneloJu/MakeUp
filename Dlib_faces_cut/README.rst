@@ -4,21 +4,21 @@ Face Cropper
 Introduction
 ************
 
-#. 将检测到的人脸剪切下来, 依次排序平铺显示在新的图像上;
+#. 將檢測到的人臉裁切下來, 依次排序顯示在新的圖像上;
 
    .. code-block:: bash
 
       python3 crop_faces_show.py
 
 
-#. 将检测到的人脸生成单个图像存储到本地路径;
+#. 將檢測到的人臉生成單個圖像儲存到本地路徑;
 
    .. code-block:: bash
 
       python3 crop_faces_save.py
 
 
-#. 将检测到的人脸,依次在摄像头窗口实时平铺显示;
+#. 將檢測到的人臉,依次在攝影頭窗口即時顯示;
 
    .. code-block:: bash
 
@@ -26,9 +26,3 @@ Introduction
 
 
 
-More
-****
-
-* Author: coneypo
-
-* Mail:   coneypo@foxmail.com
