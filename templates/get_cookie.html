@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>問卷表單</title>
+
+</head>
+
+<script>
+    $.ajax({
+    type: "GET",
+    url: "/form_db/" + userCode,
+    headers: {'Authorization': token}
+    });
+</script>
+<body>
+<!--{% block content %}-->
+<form method="GET"  action="/get_cookie/name/">
+<!--    {% csrf_token %}-->
+    <p>請選一張你最喜歡的妝感 :</p>
+    <input type="radio" id="like_style1" name="like" value="日" checked="checked"/>日系
+    <input type="radio" id="like_style2" name="like" value="韓"/>韓系
+    <input type="radio" id="like_style3" name="like" value="歐美"/>歐美風格
+
+
+    <p>請選一張你最不喜歡的妝感 : </p>
+    <input type="radio" id="unlike_style1" name="unlike" value="日" checked="checked"/>日系
+    <input type="radio" id="unlike_style2" name="unlike" value="韓"/>韓系
+    <input type="radio" id="unlike_style3" name="unlike" value="歐美"/>歐美風格
+
+
+    <p>平均一項化妝品，願意花費多少? : </p>
+    <input type="radio" id="pay_money1" name="money" value="300" checked="checked"/>300以下
+    <input type="radio" id="pay_money2" name="money" value="500"/>300~750
+    <input type="radio" id="pay_money3" name="money" value="1000"/>750以上
+
+    <p>請問平常都經由什麼管道購買化妝品? : </p>
+    <input type="radio" id="sales_channel1" name="channel" value="專櫃" checked="checked"/>專櫃
+    <input type="radio" id="sales_channel2" name="channel" value="開架"/>開架
+    <input type="radio" id="sales_channel3" name="channel" value="網路"/>網路
+<!--    <input type="radio" id="sales_channel4" name="channel" value="其他"/>其他-->
+
+
+    <p>較注重哪些機能? : </p>
+    <input type="radio" id="functions1" name="func" value="持久" checked="checked"/>持久
+    <input type="radio" id="functions2" name="func" value="自然"/>自然
+    <input type="radio" id="functions3" name="func" value="顯色"/>顯色
+
+    <p><input type="submit" name="button" value="送出資料"  />
+
+
+
+</form>
+<!--{% endblock %}-->
+</body>
+</html>
