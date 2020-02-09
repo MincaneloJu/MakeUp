@@ -1,0 +1,113 @@
+from pyspark import SparkContext
+from pyspark.streaming import StreamingContext
+from pyspark.streaming.kafka import KafkaUtils
+
+
+import tensorflow as tf
+import numpy as np
+import os
+import glob
+from imageio import imread, imsave ,imwrite
+
+import cv2
+
+from hdfs import *
+
+
+def make_upup(path):
+    
+
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument('--no_makeup', type=str,default=os.path.join(path=path),help='path to the no_makeup image')
+    # args = parser.parse_args()
+
+    ##### have to change ##### 
+    ngrok_path = 'https://' + '3556c32c.ngrok.io'
+    ##### have to change #####
+
+    batch_size = 1
+    img_size = 256
+
+    no_makeup = cv2.resize(imread(str(path)), (img_size, img_size))
+
+    preprocess_n = (no_makeup / 255. - 0.5) * 2
+    X_img = np.expand_dims(preprocess_n, 0)
+    makeups = glob.glob(os.path.join('/home/cloudera/Desktop/makeup_model/imgs', '/home/cloudera/Desktop/makeup_model/imgs/makeup', '*.*'))
+    result = np.ones((2 * img_size, (len(makeups) + 1) * img_size, 3))
+    result[img_size: 2 *  img_size, :img_size] = no_makeup / 255.
+
+
+    tf.reset_default_graph()
+    sess = tf.Session()
+    sess.run(tf.global_variables_initializer())
+
+    saver = tf.train.import_meta_graph(os.path.join('/home/cloudera/Desktop/makeup_model/model', '/home/cloudera/Desktop/makeup_model/model/model.meta'))
+    saver.restore(sess, tf.train.latest_checkpoint('/home/cloudera/Desktop/makeup_model/model'))
+
+    graph = tf.get_default_graph()
+    X = graph.get_tensor_by_name('X:0')
+    Y = graph.get_tensor_by_name('Y:0')
+    Xs = graph.get_tensor_by_name('generator/xs:0')
+
+    for i in range(len(makeups)):
+        makeup = cv2.resize(imread(makeups[i]), (img_size, img_size))
+        preprocess_y = (makeup / 255. - 0.5) * 2
+        Y_img = np.expand_dims(preprocess_y, 0)
+        Xs_ = sess.run(Xs, feed_dict={X: X_img, Y: Y_img})
+        xx = (Xs_ + 1) / 2
+        Xs_ = xx
+        result[:img_size, (i + 1) * img_size: (i + 2) * img_size] = makeup / 255.
+        result[img_size: 2 * img_size, (i + 1) * img_size: (i + 2) * img_size] = Xs_[0]
+
+    path_id = path.split('/')[4].split('.')[0]
+    output_path = ngrok_path + '/static' + '/' + path_id + '_makeup.jpg'
+
+    #check images
+    imsave('/home/cloudera/Desktop/makeup_model/output/%s_makeup.jpg' %(path_id), result)
+    #upload images
+    client = Client("http://127.0.0.1:50070")
+    client.upload( "/user/cloudera/makeup_images/","/home/cloudera/Desktop/makeup_model/output/%s_makeup.jpg" %(path_id) )
+
+    #imsave('%s' %(output_path), result)
+
+    ok = "The image is output in the file"
+    return (ok ,output_path)
+
+
+def trans_ip(x):
+    ngrok_path = 'https://' + '3556c32c.ngrok.io'
+    x1 = x[1]
+    disi = x1.split('/')
+    string = ngrok_path +'/'+ disi[2] + '/' + disi[3]
+    return string
+
+
+
+if __name__ == "__main__":
+
+    sc = SparkContext()
+    ssc = StreamingContext(sc, 6)
+
+    lines = KafkaUtils.createStream(ssc,"10.120.38.7:2181","connectkafka", {"test": 1})
+    
+    ### Step 1 change to https ###
+    images_stream = lines.map(trans_ip)
+
+
+    ### Step 2 makeup for image & save image to staticFile ###
+    output_message = images_stream.map(make_upup)
+    output_message.pprint()
+
+    # start it
+    ssc.start()
+    ssc.awaitTermination()
+
+
+
+######
+#spark-submit --master spark://quickstart.cloudera:7077 --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.4.4 
+
+#spark-submit --master spark://quickstart.cloudera:7077 --executor-cores 4 --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.4.4 images_streaming.py
+
+#pyspark --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.4.4
+######
