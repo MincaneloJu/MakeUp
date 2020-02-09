@@ -70,7 +70,7 @@ def make_upup(path):
 
     #imsave('%s' %(output_path), result)
 
-    ok = "The image is output in the file"
+    ok = "Image output ,yeah!"
     return (ok ,output_path)
 
 
